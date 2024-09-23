@@ -5,7 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import williammendesd.com.github.ms_aluno.DTO.AlunoDTO;
 import williammendesd.com.github.ms_aluno.model.Aluno;
+import williammendesd.com.github.ms_aluno.model.Status;
 import williammendesd.com.github.ms_aluno.repository.AlunoRepository;
+import williammendesd.com.github.ms_aluno.services.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,8 +24,8 @@ public class AlunoService {
     }
 
     @Transactional
-    public AlunoDTO findById(Integer id){
-        Aluno aluno = repository.findById(id).orElseThrow();
+    public AlunoDTO findById(Long id){
+        Aluno aluno = repository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Recurso nao encontrado"));
         return new AlunoDTO(aluno);
     }
 
@@ -31,31 +33,32 @@ public class AlunoService {
     public AlunoDTO insert(AlunoDTO dto){
         Aluno entity = new Aluno();
         copyDtoToEntity(dto, entity);
+        entity.setStatus(Status.MATRICULADO);
         repository.save(entity);
         return new AlunoDTO(entity);
     }
 
     @Transactional
-    public AlunoDTO update(Integer id, AlunoDTO dto){
+    public AlunoDTO update(Long id, AlunoDTO dto){
         try {
             Aluno entity = repository.getReferenceById(id);
             copyDtoToEntity(dto, entity);
             repository.save(entity);
             return new AlunoDTO(entity);
         }catch (Exception e){
-            throw new RuntimeException("Recurso nao encontrado");
+            throw new ResourceNotFoundException("Recurso nao encontrado");
         }
     }
 
     @Transactional
-    public void delete(Integer id){
+    public void delete(Long id){
         if(!repository.existsById(id)){
-            throw new RuntimeException("Recurso nao encontraod");
+            throw new ResourceNotFoundException("Recurso nao encontraod");
         }
         try {
             repository.deleteById(id);
         } catch (Exception e){
-            throw new RuntimeException("Falha ao deletar");
+            throw new ResourceNotFoundException("Falha ao deletar");
         }
 
     }
